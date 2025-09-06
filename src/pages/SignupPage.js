@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import api from "../utils/api";
 import toast from "react-hot-toast/headless";
 import { ElementExecutor } from "../view/engine";
+import { useNavigate } from "react-router-dom";
 function SignupPage({ onLogin }) {
   const [loading, setLoading] = useState(false);
+  const navigate=useNavigate()
   const [schema,setSchema]=useState(
     {
          schema: [{
@@ -49,18 +51,19 @@ function SignupPage({ onLogin }) {
   
 
   )
-  const handleLogin = async (values) => {
+   const handleRegister = async (values) => {
     setLoading(true);
     try {
       const res = await api.post("/auth/register", values);
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      
-        toast.success('Registerd Successfully!');
-      onLogin(res.data.user);
-
+      if (res.data.status === true) {
+        toast.success("Registered Successfully!");
+        navigate("/login");
+      } else {
+        toast.error(res.data.message || "Registration failed");
+      }
     } catch (err) {
+      toast.error(err.response?.data?.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -81,13 +84,13 @@ function SignupPage({ onLogin }) {
 };
 
   const handleSelectedRecord=(e)=>{
-    console.log(schema);
+    
     
    if (e.name==="register"){
      const payload = buildPayload(schema.schema);
     console.log("Payload to send:", payload);
 
-    handleLogin(payload);
+    handleRegister(payload);
    }
   }
   return (

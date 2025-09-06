@@ -9,20 +9,21 @@ import React, {
 } from 'react';
 import { TextElement } from '../components/TextElement';
 import { Button } from '../components/Button';
-// import {
-//   Dropdown,
-//   Modal,
-//   Popover,
-//   ConfigProvider,
-//   InputRef,
-//   Tabs,
-//   Collapse,
-//   CollapseProps,
-// } from 'antd';
+import { DivContainer } from '../components/DivContainer';
+import { TableElement } from '../components/TableElement';
+import {
+  Dropdown,
+  Modal,
+  Popover,
+  ConfigProvider,
+  InputRef,
+  Tabs,
+  Collapse,
+  CollapseProps,
+} from 'antd';
 // import { TabsPosition } from 'antd/es/tabs';
 // import moment from 'moment';
-// import Draggable from 'react-draggable';
-// import type { DraggableData, DraggableEvent } from 'react-draggable';
+import Draggable from 'react-draggable';
 
 
 // import { UploadFile } from 'antd';
@@ -113,6 +114,108 @@ export const ElementExecutor = (props) => {
               props.selectedRecord && props.selectedRecord(elementProps)
             }
           />
+        );
+         case 'div':
+        return <DivContainer {...elementProps} onClick={() =>
+              props.selectedRecord && props.selectedRecord(elementProps)
+            } />;
+             case 'table':
+        return (
+          <TableElement
+            {...(elementProps)}
+            onChange={(value) => onHandleChange(elementProps.name || '', value)}
+          />
+        );
+        case 'modal':
+        // console.log(elementProps.mask);
+        return (
+          <Modal
+            open={elementProps.visible}
+            okButtonProps={{ style: { display: 'none' } }}
+            cancelButtonProps={{ style: { display: 'none' } }}
+            closable={false}
+            className={elementProps.containerClassName}
+            width={elementProps.width}
+            footer={null}
+            centered={true}
+            // mask={elementProps.mask || true}
+            mask={elementProps.mask ?? true}
+            styles={{
+              mask: elementProps.mask === false ? { display: 'none' } : {},
+            }}
+            style={
+              elementProps.mask === false
+                ? {
+                    position: 'absolute',
+                    pointerEvents: 'none',
+                  }
+                : {}
+            }
+            // maskClosable={elementProps.maskClosable || true}
+            modalRender={(modal) => {
+              // Only wrap in Draggable if draggable prop is true
+              // if (elementProps?.draggable) {
+              //   const [disabled, setDisabled] = useState(true);
+              //   const [bounds, setBounds] = useState({
+              //     left: 0,
+              //     top: 0,
+              //     bottom: 0,
+              //     right: 0,
+              //   });
+              //   const draggleRef = useRef<HTMLDivElement>(null);
+
+              //   const onStart = (
+              //     _event,
+              //     uiData,
+              //   ) => {
+              //     const { clientWidth, clientHeight } =
+              //       window.document.documentElement;
+              //     const targetRect =
+              //       draggleRef.current?.getBoundingClientRect();
+              //     if (!targetRect) {
+              //       return;
+              //     }
+              //     setBounds({
+              //       left: -targetRect.left + uiData.x,
+              //       right: clientWidth - (targetRect.right - uiData.x),
+              //       top: -targetRect.top + uiData.y,
+              //       bottom: clientHeight - (targetRect.bottom - uiData.y),
+              //     });
+              //   };
+
+              //   return (
+              //     <Draggable
+              //       disabled={disabled}
+              //       bounds={bounds}
+              //       nodeRef={draggleRef}
+              //       onStart={(event, uiData) => onStart(event, uiData)}
+              //     >
+              //       <div
+              //         ref={draggleRef}
+              //         style={{
+              //           cursor: elementProps.draggable ? 'move' : 'default',
+              //         }}
+              //         onMouseOver={() =>
+              //           elementProps.draggable && setDisabled(false)
+              //         }
+              //         onMouseOut={() =>
+              //           elementProps.draggable && setDisabled(true)
+              //         }
+              //       >
+              //         {modal}
+              //       </div>
+              //     </Draggable>
+              //   );
+              // }
+
+              // If not draggable, return modal as-is
+              return modal;
+            }}
+          >
+            <div className={elementProps.className}>
+              {renderFields(elementProps.fields || [])}
+            </div>
+          </Modal>
         );
     //   case 'input-number':
     //     return (
@@ -461,97 +564,7 @@ export const ElementExecutor = (props) => {
     //       />
     //     );
 
-    //   case 'modal':
-    //     // console.log(elementProps.mask);
-    //     return (
-    //       <Modal
-    //         open={elementProps.visible}
-    //         okButtonProps={{ style: { display: 'none' } }}
-    //         cancelButtonProps={{ style: { display: 'none' } }}
-    //         closable={false}
-    //         className={elementProps.containerClassName}
-    //         width={elementProps.width}
-    //         footer={null}
-    //         centered={true}
-    //         // mask={elementProps.mask || true}
-    //         mask={elementProps.mask ?? true}
-    //         styles={{
-    //           mask: elementProps.mask === false ? { display: 'none' } : {},
-    //         }}
-    //         style={
-    //           elementProps.mask === false
-    //             ? {
-    //                 position: 'absolute',
-    //                 pointerEvents: 'none',
-    //               }
-    //             : {}
-    //         }
-    //         // maskClosable={elementProps.maskClosable || true}
-    //         modalRender={(modal) => {
-    //           // Only wrap in Draggable if draggable prop is true
-    //           if (elementProps?.draggable) {
-    //             const [disabled, setDisabled] = useState(true);
-    //             const [bounds, setBounds] = useState({
-    //               left: 0,
-    //               top: 0,
-    //               bottom: 0,
-    //               right: 0,
-    //             });
-    //             const draggleRef = useRef<HTMLDivElement>(null);
-
-    //             const onStart = (
-    //               _event: DraggableEvent,
-    //               uiData: DraggableData,
-    //             ) => {
-    //               const { clientWidth, clientHeight } =
-    //                 window.document.documentElement;
-    //               const targetRect =
-    //                 draggleRef.current?.getBoundingClientRect();
-    //               if (!targetRect) {
-    //                 return;
-    //               }
-    //               setBounds({
-    //                 left: -targetRect.left + uiData.x,
-    //                 right: clientWidth - (targetRect.right - uiData.x),
-    //                 top: -targetRect.top + uiData.y,
-    //                 bottom: clientHeight - (targetRect.bottom - uiData.y),
-    //               });
-    //             };
-
-    //             return (
-    //               <Draggable
-    //                 disabled={disabled}
-    //                 bounds={bounds}
-    //                 nodeRef={draggleRef}
-    //                 onStart={(event, uiData) => onStart(event, uiData)}
-    //               >
-    //                 <div
-    //                   ref={draggleRef}
-    //                   style={{
-    //                     cursor: elementProps.draggable ? 'move' : 'default',
-    //                   }}
-    //                   onMouseOver={() =>
-    //                     elementProps.draggable && setDisabled(false)
-    //                   }
-    //                   onMouseOut={() =>
-    //                     elementProps.draggable && setDisabled(true)
-    //                   }
-    //                 >
-    //                   {modal}
-    //                 </div>
-    //               </Draggable>
-    //             );
-    //           }
-
-    //           // If not draggable, return modal as-is
-    //           return modal;
-    //         }}
-    //       >
-    //         <div className={elementProps.className}>
-    //           {renderFields(elementProps.fields || [])}
-    //         </div>
-    //       </Modal>
-    //     );
+      
     //   case 'collapse': {
     //     const collapseItems: CollapseProps['items'] = (
     //       elementProps.fields || []

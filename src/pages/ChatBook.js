@@ -5,7 +5,8 @@ import { ElementExecutor } from "../view/engine";
 
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-function DashboardPage({ user }) {
+function ChatBook({ user }) {
+  console.log(user);
   
     const token = localStorage.getItem("token"); 
   const navigate=useNavigate()
@@ -14,94 +15,7 @@ function DashboardPage({ user }) {
       {
         className: "bg-white rounded-xl shadow-md p-4",
         fields: [
-          {
-            element: "div",
-            name: "headerRow",
-            className: "flex justify-between items-center mb-4",
-            fields: [
-              {
-                element: "div",
-                name: "userName",
-                label: `👋 Welcome, ${user?.name || "User"}`,
-                className: "text-2xl font-bold text-gray-800",
-              },
-              {
-                element: "button",
-                name: "addCandidateBtn",
-                label: "➕ Add Candidate",
-                className:
-                  "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition",
-              },
-            ],
-          },
-          {
-            element: "table",
-            name: "candidatesTable",
-            thead: [
-              { label: "Name", name: "name", key: "name" },
-              { label: "Email", name: "email", key: "email" },
-            ],
-            pagination:true,
-            value:{page:1,pageSize:10},
-            tbody: [],
-            rowKey: "_id",
-            rowClick: true,
-            className: `
-    border rounded-md shadow-sm
-    [&_.ant-table-thead>tr>th]:bg-blue-600 
-    [&_.ant-table-thead>tr>th]:text-white 
-    [&_.ant-table-thead>tr>th]:font-semibold 
-    [&_.ant-table-thead>tr>th]:text-center
-    [&_.ant-table-tbody>tr>td]:text-center
-    [&_.ant-table]:table-fixed [&_.ant-table]:w-full
-  `
-          },
-          {
-            fields:[
-          {
-            element:"modal",
-            visible:false,
-            name:"candidateAddForm",
-            className:"bg-white rounded-2xl p-8 md:p-12 w-100 md:w-100 z-10 animate-fadeIn items-center",
-            fields:[
-               {
-      element:"div",
-      name:"closeModal",
-      className:"absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-gray-700 text-xl font-bold pb-2",
-      label:"×",
-     
-    },
-    {
-      element: "input-text",
-      name: "name",
-      label: "Name",
-      placeholder: "Enter your name",
-      className:
-        "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50",
-      labelClassName: "block text-gray-700 font-medium mb-1",
-      errorClassName: "text-red-500 text-sm mt-1",
-    },
-     {
-        element: "input-text",
-        name: "email",
-        label: "Email",
-        placeholder: "Enter your email",
-        className:
-          "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50 mt-2",
-        labelClassName: "block text-gray-700 font-medium mb-1",
-        errorClassName: "text-red-500 text-sm mt-1",
-      },
-      
-      {
-        element: "button",
-        name: "submitButton",
-        label: "Submit",
-        className:
-          "w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all duration-200 mt-4",
-      },]
-          }
-        ]
-          },
+          
            {
             fields:[
           {
@@ -342,7 +256,6 @@ const buildPayloadFromModal = (fields) => {
 
     if (field.name === "candidatesTable") {
       if (field.value.name==="view"){
-        navigate("/login")
         setSchema((prevSchema) => ({
       ...prevSchema,
       schema: updateSchemaVisibility(prevSchema.schema, "candidateNotesForm", true)
@@ -389,4 +302,4 @@ const buildPayloadFromModal = (fields) => {
   );
 }
 
-export default DashboardPage;
+export default ChatBook;

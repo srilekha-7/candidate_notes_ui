@@ -15,13 +15,48 @@ function App() {
   }, []);
 
   // Protected Route wrapper
-  const PrivateRoute = ({ children }) => {
-    return user ? children : <Navigate to="/login" />;
-  };
+  // const PrivateRoute = ({ children }) => {
+  //   return user ? children : <Navigate to="/login" />;
+  // };
 
   return (
     <Router>
+      <Toaster
+  position="top-right"
+  toastOptions={{
+    // Default styles
+    style: {
+      padding: "12px 16px",
+      borderRadius: "8px",
+      fontSize: "14px",
+    },
+    // Success toast
+    success: {
+      style: {
+        background: "#22c55e", // green
+        color: "#fff",
+      },
+      iconTheme: {
+        primary: "#fff",
+        secondary: "#22c55e",
+      },
+    },
+    // Error toast
+    error: {
+      style: {
+        background: "#ef4444", // red
+        color: "#fff",
+      },
+      iconTheme: {
+        primary: "#fff",
+        secondary: "#ef4444",
+      },
+    },
+  }}
+/>
+
       <Routes>
+        
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
         <Route path="/signup" element={<SignupPage setUser={setUser} />} />
@@ -30,9 +65,9 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <DashboardPage user={user} setUser={setUser} />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
 
