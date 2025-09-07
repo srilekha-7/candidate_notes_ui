@@ -62,7 +62,7 @@ function DashboardPage({ user }) {
             element:"modal",
             visible:false,
             name:"candidateAddForm",
-            className:"bg-white rounded-2xl p-8 md:p-12 w-100 md:w-100 z-10 animate-fadeIn items-center",
+            className:"bg-white rounded-2xl p-8 md:p-12 w-100 md:w-100 z-9999 animate-fadeIn items-center",
             fields:[
                {
       element:"div",
@@ -341,16 +341,11 @@ const buildPayloadFromModal = (fields) => {
  
 
     if (field.name === "candidatesTable") {
-      if (field.value.name==="view"){
-        navigate("/login")
-        setSchema((prevSchema) => ({
-      ...prevSchema,
-      schema: updateSchemaVisibility(prevSchema.schema, "candidateNotesForm", true)
-    }));
-      }
-      
-    
+  if (field.value.name === "view") {
+    const candidateId = field.value.value._id;
+    navigate(`/candidate/${candidateId}/notes`,{ state: field.value.value });
   }
+}
   if (field.name === "addCandidateBtn") {
      setSchema((prevSchema) => ({
       ...prevSchema,

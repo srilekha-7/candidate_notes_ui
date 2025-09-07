@@ -1,8 +1,7 @@
 import axios from "axios";
-
-// Create Axios instance
+export const BASE_URL="http://localhost:5000"
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",withCredentials: true, // thanks to setupProxy.js, this forwards to backend
+  baseURL: "http://localhost:5000/api",withCredentials: true, 
 });
 
 // Add a request interceptor → attach token if exists

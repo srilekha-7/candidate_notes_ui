@@ -40,12 +40,12 @@ export const ElementExecutor = (props) => {
     
     
   // const [data, setData] = useState<DummyData[]>([]);
-  const [schema, setSchema] = useState(props.data.schema);
+  const [schema, setSchema] = useState(props?.data?.schema);
   useEffect(() => {
-    if (props.data.schema) {
-      setSchema(props.data.schema);
+    if (props?.data?.schema) {
+      setSchema(props?.data?.schema);
     }
-  }, [props.data.schema]);
+  }, [props?.data?.schema]);
   const onHandleChange = (
     name,
     value
@@ -921,7 +921,7 @@ export const ElementExecutor = (props) => {
   };
   return (
   
-      <div className={props.data.className}>{renderFields(schema)}</div>
+      <div className={props?.data?.className}>{renderFields(schema)}</div>
  
   );
 };
