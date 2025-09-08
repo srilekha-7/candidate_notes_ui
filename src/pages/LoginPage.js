@@ -5,7 +5,7 @@ import { message } from "antd";
 import { ElementExecutor } from "../view/engine";
 import { useNavigate } from "react-router-dom";
 
-function LoginPage() {
+function LoginPage({onLogin}) {
   const [loading, setLoading] = useState(false);
   const [schema, setSchema] = useState({
     schema: [

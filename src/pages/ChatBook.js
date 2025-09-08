@@ -1,305 +1,271 @@
 import React, { useEffect, useState } from "react";
-import { message } from "antd";
-import api from "../utils/api";
 import { ElementExecutor } from "../view/engine";
-
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; 
+import { io } from "socket.io-client";
+import api from "../utils/api";
 import toast from "react-hot-toast";
+import { BASE_URL } from "../utils/api";
+const socket = io(BASE_URL);
+console.log(BASE_URL);
+
 function ChatBook({ user }) {
-  console.log(user);
-  
-    const token = localStorage.getItem("token"); 
-  const navigate=useNavigate()
-  const [schema, setSchema] = useState({
-    schema: [
-      {
-        className: "bg-white rounded-xl shadow-md p-4",
-        fields: [
-          
-           {
-            fields:[
-          {
-            element:"modal",
-            visible:false,
-            name:"candidateNotesForm",
-            className:"bg-white rounded-2xl p-8 md:p-12 w-100 md:w-100 z-10 animate-fadeIn items-center",
-            fields:[
-               {
-      element:"div",
-      name:"closeModal",
-      className:"absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-gray-700 text-xl font-bold pb-2",
-      label:"×",
-     
-    },
-    {
-      element: "input-text",
-      name: "name",
-      label: "Name",
-      placeholder: "Enter your name",
-      className:
-        "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50",
-      labelClassName: "block text-gray-700 font-medium mb-1",
-      errorClassName: "text-red-500 text-sm mt-1",
-    },
-     {
-        element: "input-text",
-        name: "email",
-        label: "Email",
-        placeholder: "Enter your email",
-        className:
-          "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50 mt-2",
-        labelClassName: "block text-gray-700 font-medium mb-1",
-        errorClassName: "text-red-500 text-sm mt-1",
-      },
-      
-      {
-        element: "button",
-        name: "submitButton",
-        label: "Submit",
-        className:
-          "w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all duration-200 mt-4",
-      },]
-          }
-        ]
-          },
-//           {
-//   fields: [
-//     {
-//       element: "modal",
-//       visible: false,
-//       name: "candidateNotesForm",
-//       className:
-//         "bg-white rounded-2xl p-8 md:p-12 w-[80vw] h-[80vh] z-10 animate-fadeIn relative flex flex-col",
-//       fields: [
-//         {
-//           element: "div",
-//           name: "closeModal",
-//           className:
-//             "absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-gray-700 text-2xl font-bold",
-//           label: "×",
-//         },
-//         {
-//           element: "div",
-//           name: "formBox",
-//           className:
-//             "flex flex-col border border-gray-300 rounded-lg p-6 overflow-y-auto flex-grow",
-//           fields: [
-//             {
-//               element: "div",
-//               name: "inputGroup",
-//               className: "flex flex-col space-y-4",
-//               fields: [
-//                 {
-//                   element: "input-text",
-//                   name: "name",
-//                   label: "Name",
-//                   placeholder: "Enter candidate name",
-//                   className:
-//                     "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50",
-//                   labelClassName: "block text-gray-700 font-medium mb-1",
-//                   errorClassName: "text-red-500 text-sm mt-1",
-//                 },
-//                 {
-//                   element: "input-text",
-//                   name: "email",
-//                   label: "Email",
-//                   placeholder: "Enter candidate email",
-//                   className:
-//                     "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50",
-//                   labelClassName: "block text-gray-700 font-medium mb-1",
-//                   errorClassName: "text-red-500 text-sm mt-1",
-//                 },
-//               ],
-//             },
-//           ],
-//         },
-//         {
-//           element: "div",
-//           name: "footer",
-//           className:
-//             "w-full flex items-center justify-end mt-4 border-t border-gray-200 pt-4",
-//           fields: [
-//             {
-//               element: "button",
-//               name: "submitButton",
-//               label: "Submit",
-//               className:
-//                 "bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-600 transition-all duration-200",
-//             },
-//           ],
-//         },
-//       ],
-//     },
-//   ],
-// }
+    const { state } = useLocation();
+    const [candidateData, setCandidateData] = useState("")
+    const token = localStorage.getItem("token");
+    const navigate = useNavigate()
+    const [messages,setMessages]=useState()
+    const [schema, setSchema] = useState({
+        schema: [
+            {
+                className: "bg-white rounded-xl shadow-md p-4",
+                fields: [
+                    {
+                        element: "div",
+                        name: "candidateChatBox",
+                        fields: [
+                            // Candidate Info
+                            {
+                                name: "candidateInfo",
+                                className: "grid grid-cols-2 gap-2 mb-2",
+                                fields: [
+                                    {
+                                        name: "nameRow",
+                                        className: "flex",
+                                        fields: [
+                                            {
+                                                element: "div",
+                                                name: "candidateName",
+                                                label: "Name:",
+                                                className: "text-lg font-semibold text-gray-800",
+                                            },
+                                            {
+                                                element: "div",
+                                                name: "candidateNameValue",
+                                                label: "",
+                                                className: "text-lg text-gray-700",
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        name: "emailRow",
+                                        className: "flex",
+                                        fields: [
+                                            {
+                                                element: "div",
+                                                name: "candidateEmail",
+                                                label: "Email:",
+                                                className: "text-lg font-semibold text-gray-800",
+                                            },
+                                            {
+                                                element: "div",
+                                                name: "candidateEmailValue",
+                                                label: "",
+                                                className: "text-lg text-gray-700",
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
 
+                            // Chat messages area
+                            {
+                                element: "div",
+                                name: "chatMessages",
+                                className:
+                                    "flex-grow border border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50 h-[60vh] overflow-y-auto",
+                                fields: [],
+                            },
+
+                            // Footer input + button
+                            {
+                                name: "chatFooter",
+                                className: "mt-4 flex space-x-2",
+                                fields: [
+                                    {
+                                        element: "input-text",
+                                        name: "chatInput",
+                                        placeholder: "Type your message...",
+                                        className:
+                                            "flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400",
+                                    },
+                                    {
+                                        element: "button",
+                                        name: "sendButton",
+                                        label: "Send",
+                                        className:
+                                            "bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition",
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
         ],
-        
-      },
-    ],
-  });
+    });
+    const updateSchema = (fields) => {
+        return fields.map((field) => {
+            // Direct match for modal
+            if (field.name === "candidateNameValue") {
+                field.label = state.name
+            }
+            if (field.name === "candidateEmailValue") {
+                field.label = state.email
+            }
 
-  // Fetch candidates from backend
-   const updateTableData = (fields, tableName, data) => {
-  return fields.map((field) => {
-    // If this is the table we want, update its tbody
-    if (field.element === "table" && field.name === tableName) {
-      return { ...field, tbody: data };
-    }
-    // If the field has nested fields, recurse
-    if (field.fields && field.fields.length > 0) {
-      return { ...field, fields: updateTableData(field.fields, tableName, data) };
-    }
-    return field;
-  });
-};
-  const fetchCandidates = async () => {
-    try {
-      const res = await api.get("/candidate",{
-        headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      });
-     
+            if (field.fields && field.fields.length > 0) {
+                const updatedFields = updateSchema(field.fields);
+                return {
+                    ...field,
+                    fields: updatedFields
+                };
+            }
 
-if (res.data.status) {
+            return field;
+        });
+    };
+
+   
+    
+
+    const getPayload = (fields) => {
+        return fields.reduce((acc, field) => {
+            if (field.name === "chatInput") {
+                acc[field.name] = field.value;
+                field.value=""
+            }
+
+            if (field.fields && field.fields.length > 0) {
+                const nestedPayload = getPayload(field.fields);
+                Object.assign(acc, nestedPayload); 
+            }
+
+            return acc;
+        }, {});
+    };
+const updateMessagesInSchema = (msgs) => {
+  
   setSchema((prev) => {
+    const updateFields = (fields) =>
+      fields.map((field) => {
+        if (field.name === "chatMessages") {
+            
+          return {
+            ...field,        
+            fields: msgs.map((msg) => (
+                {className:"grid grid-cols-2",
+                    fields:[{ element: "div",
+              name: `msgName-${msg._id}`,
+              label: `${msg.userName}:`,
+              className:"text-sm font-semibold text-gray-800 p-2 text-right"
+            }, {
+              element: "div",
+              name: `msg-${msg._id}`,
+              label: msg.text,
+              className: `p-2 rounded ${
+                msg.user_id === user.id
+                  ? "bg-blue-100 text-right"
+                  : "bg-gray-200 text-left"
+              }`,
+            }]}
+               )),
+          };
+        }
+
+        if (field.fields && field.fields.length > 0) {
+          return {
+            ...field,
+            fields: updateFields(field.fields),
+          };
+        }
+
+        return field;
+      });
+
     return {
       ...prev,
-      schema: updateTableData(prev.schema, "candidatesTable", res.data.candidates),
+      schema: prev.schema.map((section) => ({
+        ...section,
+        fields: updateFields(section.fields),
+      })),
     };
   });
-}
+};
 
-      
-    } catch (err) {
-      message.error("Failed to fetch candidates");
-    }
-  };
 
-  useEffect(() => {
-    fetchCandidates();
-  }, []);
-  const addCandidiate=async(payload)=>{
+    const fetchNotes = async () => {
     try {
-      const res = await api.post("/candidate", payload,{
-        headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      });
-      
-      if (res.data.status === true) {
-        
-        fetchCandidates();
-        toast.success("Login Successful!");
-
-        
-      } else {
-        toast.error(res.data.message);
-      }
+      const res = await api.get(`/candidate/${state._id}/notes`);
+      setMessages(res.data);
+      updateMessagesInSchema(res.data);
     } catch (err) {
-      console.log(err);
-      
-      toast.error(err.response?.data?.message || "Something went wrong!");
-    } 
-  }
-const updateSchemaVisibility = (fields, modalName, visible) => {
-  return fields.map((field) => {
-    // Direct match for modal
-    if (field.element === "modal" && field.name === modalName) {
-      console.log({...field, visible})
-      return { ...field, visible };
-    }
-    
-    // If nested fields exist, recurse deeply
-    if (field.fields && field.fields.length > 0) {
-      const updatedFields = updateSchemaVisibility(field.fields, modalName, visible);
-      return { 
-        ...field, 
-        fields: updatedFields
-      };
-    }
-
-    return field;
-  });
-};
-
-const buildPayloadFromModal = (fields) => {
-  const modal = fields.find(f => f.element === "modal" && f.name === "candidateAddForm");
-  if (!modal) {
-    for (const f of fields) {
-      if (f.fields && f.fields.length > 0) {
-        const result = buildPayloadFromModal(f.fields);
-        if (result) return result;
-      }
-    }
-    return null;
-  }
-
-  const collectInputs = (fields) => {
-    return fields.reduce((acc, field) => {
-      if (field.fields && field.fields.length > 0) {
-        return { ...acc, ...collectInputs(field.fields) };
-      } else if (field.element !== "button" && field.element !== "div") {
-        acc[field.name] = field.value || "";
-        field.value = "";
+        console.log(err);
         
-      }
-      return acc;
-    }, {});
+      toast.error("Failed to load notes");
+    }
   };
+ useEffect(() => {
+    if (state) {
+      setCandidateData(state);
+      setSchema((prev) => ({ ...prev, schema: updateSchema(prev.schema) }));
+      fetchNotes();
 
-  return collectInputs(modal.fields);
-};
-  const handleSelectedRecord = (field) => {
- 
+      socket.emit("joinRoom", state._id);
 
-    if (field.name === "candidatesTable") {
-      if (field.value.name==="view"){
-        setSchema((prevSchema) => ({
-      ...prevSchema,
-      schema: updateSchemaVisibility(prevSchema.schema, "candidateNotesForm", true)
-    }));
-      }
-      
-    
-  }
-  if (field.name === "addCandidateBtn") {
-     setSchema((prevSchema) => ({
-      ...prevSchema,
-      schema: updateSchemaVisibility(prevSchema.schema, "candidateAddForm", true)
-    }));
-  }
-  if (field.name==="closeModal"){
-    
-    setSchema(prev => ({
-      ...prev,
-      schema: updateSchemaVisibility(
-        updateSchemaVisibility(prev.schema, "candidateAddForm", false)
-      )
-    }));
-  }
-  if (field.name==="submitButton"){
-    const payload = buildPayloadFromModal(schema.schema);
-    
-    addCandidiate(payload)
-    setSchema(prev => ({
-      ...prev,
-      schema: updateSchemaVisibility(prev.schema, "candidateAddForm", false)
-    }));
+      socket.on("noteAdded", (note) => {
+        console.log("note",note);
+        
+        setMessages((prev) => {
+            
+          const updated = [...prev, note];
+          updateMessagesInSchema(updated);
+          return updated;
+        });
+      });
+    }
+
+    return () => {
+      socket.off("noteAdded");
+    };
+  }, [state]);
+
+    const handleSelectedRecord = async(field) => {
 
 
-  }
-};
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
-      <ElementExecutor
-        data={schema}
-        setData={setSchema}
-        selectedRecord={handleSelectedRecord}
-      />
-    </div>
-  );
+
+        if (field.name === "sendButton") {
+      const payload = getPayload(schema.schema);
+      if (!payload.chatInput.trim()) return;
+       try {
+      const res = await api.post(
+        `/candidate/${state._id}/notes`,
+        { text: payload.chatInput },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    }catch(err){
+        console.log(err);
+        
+    }
+
+      socket.emit("newNote", {
+        candidateId: state._id,
+        userId: user._id,
+        text: payload.chatInput,
+      });
+
+     
+    }
+    };
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
+            <ElementExecutor
+                data={schema&&schema}
+                setData={setSchema}
+                selectedRecord={handleSelectedRecord}
+            />
+        </div>
+    );
 }
 
 export default ChatBook;

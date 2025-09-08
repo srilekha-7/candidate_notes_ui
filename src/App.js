@@ -1,62 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { ToastBar,Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/DashboardPage";
+import ChatBook from "./pages/ChatBook";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); 
 
-  // Load user from localStorage on startup
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false); // auth check complete
   }, []);
 
   // Protected Route wrapper
-  // const PrivateRoute = ({ children }) => {
-  //   return user ? children : <Navigate to="/login" />;
-  // };
+  const PrivateRoute = ({ children }) => {
+    if (loading) return null; // or a loader/spinner
+    return user ? children : <Navigate to="/login" />;
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
 
   return (
     <Router>
       <Toaster
-  position="top-right"
-  toastOptions={{
-    // Default styles
-    style: {
-      padding: "12px 16px",
-      borderRadius: "8px",
-      fontSize: "14px",
-    },
-    // Success toast
-    success: {
-      style: {
-        background: "#22c55e", // green
-        color: "#fff",
-      },
-      iconTheme: {
-        primary: "#fff",
-        secondary: "#22c55e",
-      },
-    },
-    // Error toast
-    error: {
-      style: {
-        background: "#ef4444", // red
-        color: "#fff",
-      },
-      iconTheme: {
-        primary: "#fff",
-        secondary: "#ef4444",
-      },
-    },
-  }}
-/>
+        position="top-right"
+        toastOptions={{
+          style: { padding: "12px 16px", borderRadius: "8px", fontSize: "14px" },
+          success: {
+            style: { background: "#22c55e", color: "#fff" },
+            iconTheme: { primary: "#fff", secondary: "#22c55e" },
+          },
+          error: {
+            style: { background: "#ef4444", color: "#fff" },
+            iconTheme: { primary: "#fff", secondary: "#ef4444" },
+          },
+        }}
+      />
 
       <Routes>
-        
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
         <Route path="/signup" element={<SignupPage setUser={setUser} />} />
@@ -65,11 +54,20 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            // <PrivateRoute>
+            <PrivateRoute>
               <DashboardPage user={user} setUser={setUser} />
-            // </PrivateRoute>
+            </PrivateRoute>
           }
         />
+        <Route
+  path="/candidate/:id/notes"
+  element={
+    <PrivateRoute>
+      <ChatBook user={user} setUser={setUser} />
+    </PrivateRoute>
+  }
+/>
+
 
         {/* Default redirect */}
         <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
