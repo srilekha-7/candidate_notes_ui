@@ -5,7 +5,7 @@ import { message } from "antd";
 import { ElementExecutor } from "../view/engine";
 import { useNavigate } from "react-router-dom";
 
-function LoginPage({onLogin}) {
+function LoginPage({setUser}) {
   const [loading, setLoading] = useState(false);
   const [schema, setSchema] = useState({
     schema: [
@@ -61,7 +61,8 @@ function LoginPage({onLogin}) {
 
         toast.success("Login Successful!");
         // onLogin(res.data.user);
-
+        
+    setUser(res.data.user);
         navigate("/dashboard"); 
       } else {
         toast.error(res.data.message || "Login failed");

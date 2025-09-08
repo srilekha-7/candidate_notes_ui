@@ -1,7 +1,6 @@
 import React, { useState, useEffect, ReactNode, useMemo } from 'react';
 import { Table, TableColumnsType, Popconfirm, Tooltip, Button } from 'antd';
 
-// import { SwitchElement } from './SwitchElement';
 import { Badge } from 'antd';
 import { FilterFilled } from '@ant-design/icons';
 import {
@@ -93,12 +92,11 @@ export const TableElement = (props) => {
     }
   }, [tbody, pagination]);
   useEffect(() => {
-    // Automatically expand the first record with children
     const firstRecordWithChildren = dataSource.find(
       (record) => record.children && record.children?.length > 0,
     );
     if (firstRecordWithChildren?.key !== undefined) {
-      setExpandedRowKeys([firstRecordWithChildren.key]); // Use the key of the record, not a hardcoded value
+      setExpandedRowKeys([firstRecordWithChildren.key]);
     }
   }, [dataSource]);
   const handleDelete = (record) => {
@@ -145,11 +143,7 @@ export const TableElement = (props) => {
           pageSize: _pagination.pageSize ?? 30,
         });
         props.onChange({ name: 'filters', value: newFilters });
-        // props.onChange({
-        //   name: 'pagination',
-        //   page: 1,
-        //   pageSize: _pagination.pageSize,
-        // });
+       
       }
     }
   };
@@ -255,27 +249,7 @@ export const TableElement = (props) => {
         },
 
         filterMultiple: true,
-        // sorter:
-        //   col.sortable ||
-        //   (col.sortable === undefined && {
-        //     compare: (
-        //       a: { [x: string]: string | number },
-        //       b: { [x: string]: string | number },
-        //     ) => {
-        //       const aValue = a[col.key!];
-        //       const bValue = b[col.key!];
-        //       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        //         return aValue - bValue;
-        //       } else if (
-        //         typeof aValue === 'string' &&
-        //         typeof bValue === 'string'
-        //       ) {
-        //         return aValue.localeCompare(bValue);
-        //       } else {
-        //         return 0;
-        //       }
-        //     },
-        //   }),
+    
       })),
     ];
 
@@ -372,7 +346,6 @@ export const TableElement = (props) => {
                   bottom: '0',
                   left: '0',
                   backgroundColor: '#ffffff',
-                  // boxShadow: '0 -1px 4px rgba(0, 0, 0, 0.1)',
                   textAlign: 'center',
                   padding: '5px 0',
                   zIndex: 10,
@@ -468,35 +441,6 @@ export const TableElement = (props) => {
             : ''
         }
       />
-      {/* <span
-        style={{
-          position: 'sticky',
-          bottom: '0',
-          left: '0',
-          width: '100%',
-          backgroundColor: '#ffffff',
-          boxShadow: '0 -1px 4px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center',
-          padding: '10px 0',
-          zIndex: 10,
-        }}
-      >
-        {props.pagination ? (
-          <Pagination
-            align="end"
-            current={pagination.page}
-            pageSize={pagination.pageSize}
-            pageSizeOptions={[10, 20, 30, 50, 100]}
-            showTotal={(total) => `Total: ${total} items`}
-            total={props.count}
-            showSizeChanger={props.count ? props.count > 10 : 0 > 10}
-            onChange={(page, pageSize) =>
-              props.onChange &&
-              props.onChange({ name: 'pagination', page, pageSize })
-            }
-          />
-        ) : null}
-      </span> */}
     </div>
   );
 };

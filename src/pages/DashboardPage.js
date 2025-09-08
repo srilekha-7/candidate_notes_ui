@@ -5,8 +5,11 @@ import { ElementExecutor } from "../view/engine";
 
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { BASE_URL } from "../utils/api";
+import { io } from "socket.io-client";
 function DashboardPage({ user }) {
   
+const socket = io(BASE_URL);
     const token = localStorage.getItem("token"); 
   const navigate=useNavigate()
   const [schema, setSchema] = useState({
@@ -24,14 +27,25 @@ function DashboardPage({ user }) {
                 name: "userName",
                 label: `👋 Welcome, ${user?.name || "User"}`,
                 className: "text-2xl font-bold text-gray-800",
-              },
-              {
+              },{
+              fields:[
+                {
+  element: "notifications",
+  name: "notifications",
+  className: "m-4", 
+  buttonClassName: "bg-transparent border-none shadow-none",
+  iconsClassName: "text-2xl text-gray-700 hover:text-blue-500",
+  placement: "bottomRight",
+  items: [], 
+},{
                 element: "button",
                 name: "addCandidateBtn",
-                label: "➕ Add Candidate",
+                label: "+ Add Candidate",
                 className:
                   "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition",
               },
+              ]}
+              
             ],
           },
           {
@@ -102,6 +116,7 @@ function DashboardPage({ user }) {
           }
         ]
           },
+          
            {
             fields:[
           {
@@ -148,76 +163,7 @@ function DashboardPage({ user }) {
           }
         ]
           },
-//           {
-//   fields: [
-//     {
-//       element: "modal",
-//       visible: false,
-//       name: "candidateNotesForm",
-//       className:
-//         "bg-white rounded-2xl p-8 md:p-12 w-[80vw] h-[80vh] z-10 animate-fadeIn relative flex flex-col",
-//       fields: [
-//         {
-//           element: "div",
-//           name: "closeModal",
-//           className:
-//             "absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-gray-700 text-2xl font-bold",
-//           label: "×",
-//         },
-//         {
-//           element: "div",
-//           name: "formBox",
-//           className:
-//             "flex flex-col border border-gray-300 rounded-lg p-6 overflow-y-auto flex-grow",
-//           fields: [
-//             {
-//               element: "div",
-//               name: "inputGroup",
-//               className: "flex flex-col space-y-4",
-//               fields: [
-//                 {
-//                   element: "input-text",
-//                   name: "name",
-//                   label: "Name",
-//                   placeholder: "Enter candidate name",
-//                   className:
-//                     "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50",
-//                   labelClassName: "block text-gray-700 font-medium mb-1",
-//                   errorClassName: "text-red-500 text-sm mt-1",
-//                 },
-//                 {
-//                   element: "input-text",
-//                   name: "email",
-//                   label: "Email",
-//                   placeholder: "Enter candidate email",
-//                   className:
-//                     "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50",
-//                   labelClassName: "block text-gray-700 font-medium mb-1",
-//                   errorClassName: "text-red-500 text-sm mt-1",
-//                 },
-//               ],
-//             },
-//           ],
-//         },
-//         {
-//           element: "div",
-//           name: "footer",
-//           className:
-//             "w-full flex items-center justify-end mt-4 border-t border-gray-200 pt-4",
-//           fields: [
-//             {
-//               element: "button",
-//               name: "submitButton",
-//               label: "Submit",
-//               className:
-//                 "bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-600 transition-all duration-200",
-//             },
-//           ],
-//         },
-//       ],
-//     },
-//   ],
-// }
+
 
         ],
         
@@ -225,14 +171,11 @@ function DashboardPage({ user }) {
     ],
   });
 
-  // Fetch candidates from backend
    const updateTableData = (fields, tableName, data) => {
   return fields.map((field) => {
-    // If this is the table we want, update its tbody
     if (field.element === "table" && field.name === tableName) {
       return { ...field, tbody: data };
     }
-    // If the field has nested fields, recurse
     if (field.fields && field.fields.length > 0) {
       return { ...field, fields: updateTableData(field.fields, tableName, data) };
     }
@@ -263,8 +206,69 @@ if (res.data.status) {
     }
   };
 
+
+const updateSchemaWithNotifications = (fields, items) => {
+  return fields.map((field) => {
+    if ( field.name === "notifications") {
+      return { ...field, items };
+    }
+    if (field.fields && field.fields.length > 0) {
+      return { ...field, fields: updateSchemaWithNotifications(field.fields, items) };
+    }
+    return field;
+  });
+};
+
+const fetchNotifications = async () => {
+  try {
+    const res = await api.get("/notifications", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.data.status){
+      
+  const items = res.data.data.map((n) => ({
+    name: n.candidateId?.name,
+    email: n.candidateId?.email,
+    _id: n.candidateId?._id,
+    message: n.message,
+    messageId: n._id, 
+    text: `${n.message}`, 
+    time: new Date(n.createdAt).toLocaleString(), 
+    isRead: n.isRead,
+  }));
+
+  setSchema((prev) => ({
+    ...prev,
+    schema: updateSchemaWithNotifications(prev.schema, items),
+  }));
+    }
+    
+  } catch (err) {
+    toast.error("Failed to load notifications");
+  }
+};
+
   useEffect(() => {
     fetchCandidates();
+    fetchNotifications()
+     if (user?._id) {
+    socket.emit("joinUserRoom", user._id);
+
+    socket.on("newNotification", (notif) => {
+      setSchema((prev) => ({
+        ...prev,
+        schema: updateSchemaWithNotifications(
+          prev.schema,
+          [notif, ...(prev.schema.find(f => f.name === "notificationsList")?.dataSource || [])]
+        ),
+      }));
+      toast.success("You have a new notification!");
+    });
+  }
+
+  return () => {
+    socket.off("newNotification");
+  };
   }, []);
   const addCandidiate=async(payload)=>{
     try {
@@ -291,13 +295,11 @@ if (res.data.status) {
   }
 const updateSchemaVisibility = (fields, modalName, visible) => {
   return fields.map((field) => {
-    // Direct match for modal
     if (field.element === "modal" && field.name === modalName) {
-      console.log({...field, visible})
+      
       return { ...field, visible };
     }
     
-    // If nested fields exist, recurse deeply
     if (field.fields && field.fields.length > 0) {
       const updatedFields = updateSchemaVisibility(field.fields, modalName, visible);
       return { 
@@ -337,8 +339,20 @@ const buildPayloadFromModal = (fields) => {
 
   return collectInputs(modal.fields);
 };
-  const handleSelectedRecord = (field) => {
- 
+  const handleSelectedRecord = async(field) => {
+    if (field.name==="notifications"){
+      
+      try {
+        
+    await api.put(`/notifications/${field.value._id}/read`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    navigate(`/candidate/${field.value.candidateId}/notes`, { state: field.value });
+  } catch (err) {
+    console.error("Failed to mark notification as read:", err);
+  }
+    }
+    
 
     if (field.name === "candidatesTable") {
   if (field.value.name === "view") {

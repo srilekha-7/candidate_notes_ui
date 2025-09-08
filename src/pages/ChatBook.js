@@ -7,7 +7,6 @@ import api from "../utils/api";
 import toast from "react-hot-toast";
 import { BASE_URL } from "../utils/api";
 const socket = io(BASE_URL);
-console.log(BASE_URL);
 
 function ChatBook({ user }) {
     const { state } = useLocation();
@@ -15,6 +14,7 @@ function ChatBook({ user }) {
     const token = localStorage.getItem("token");
     const navigate = useNavigate()
     const [messages,setMessages]=useState()
+    const [chatInput,setChatInput]=useState()
     const [schema, setSchema] = useState({
         schema: [
             {
@@ -24,7 +24,6 @@ function ChatBook({ user }) {
                         element: "div",
                         name: "candidateChatBox",
                         fields: [
-                            // Candidate Info
                             {
                                 name: "candidateInfo",
                                 className: "grid grid-cols-2 gap-2 mb-2",
@@ -68,23 +67,21 @@ function ChatBook({ user }) {
                                 ],
                             },
 
-                            // Chat messages area
                             {
-                                element: "div",
+                                element:"div",
                                 name: "chatMessages",
-                                className:
-                                    "flex-grow border border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50 h-[60vh] overflow-y-auto",
-                                fields: [],
+                                className:"flex-grow border border-gray-300 rounded-lg p-4 space-y-3 bg-gray-50 h-[60vh] overflow-y-auto",
+                                fields:[]
                             },
 
-                            // Footer input + button
                             {
                                 name: "chatFooter",
                                 className: "mt-4 flex space-x-2",
                                 fields: [
                                     {
-                                        element: "input-text",
+                                        element: "input-mention",
                                         name: "chatInput",
+                                        options:[],
                                         placeholder: "Type your message...",
                                         className:
                                             "flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400",
@@ -104,9 +101,9 @@ function ChatBook({ user }) {
             },
         ],
     });
+    
     const updateSchema = (fields) => {
         return fields.map((field) => {
-            // Direct match for modal
             if (field.name === "candidateNameValue") {
                 field.label = state.name
             }
@@ -125,82 +122,121 @@ function ChatBook({ user }) {
             return field;
         });
     };
+const updateUsersInSchema = (fields,data) => {
 
-   
+  
+   const options = data.map((d) => ({
+  
     
-
-    const getPayload = (fields) => {
-        return fields.reduce((acc, field) => {
-            if (field.name === "chatInput") {
-                acc[field.name] = field.value;
-                field.value=""
+    value: d.name,
+    key:d._id,
+    email:d.email,
+    label: d.name,
+  }));
+  
+        return fields?.map((field) => {
+            
+            if (field.name==="chatInput"){
+              field.options=options
+              
             }
 
             if (field.fields && field.fields.length > 0) {
-                const nestedPayload = getPayload(field.fields);
-                Object.assign(acc, nestedPayload); 
+                const updatedFields = updateUsersInSchema(field.fields,data);
+                return {
+                    ...field,
+                    fields: updatedFields
+                };
             }
 
-            return acc;
-        }, {});
+            return field;
+        });
     };
-const updateMessagesInSchema = (msgs) => {
-  
-  setSchema((prev) => {
-    const updateFields = (fields) =>
-      fields.map((field) => {
-        if (field.name === "chatMessages") {
-            
-          return {
-            ...field,        
-            fields: msgs.map((msg) => (
-                {className:"grid grid-cols-2",
-                    fields:[{ element: "div",
-              name: `msgName-${msg._id}`,
-              label: `${msg.userName}:`,
-              className:"text-sm font-semibold text-gray-800 p-2 text-right"
-            }, {
-              element: "div",
-              name: `msg-${msg._id}`,
-              label: msg.text,
-              className: `p-2 rounded ${
-                msg.user_id === user.id
-                  ? "bg-blue-100 text-right"
-                  : "bg-gray-200 text-left"
-              }`,
-            }]}
-               )),
-          };
-        }
+const updateMessagesInSchema = (fields, data) => {
+  return fields?.map((field) => {
+    if (field.name === "chatMessages") {
+     
+      if (data.length!==0){
+        field.element=""
+      }
+      field.fields = data.map((msg) => ({
+        className: "flex",
+        fields: [
+          {
+            element: "div",
+            name: `msgName-${msg._id}`,
+            label: `${msg.userName}:`,
+            className: `w-[100px] text-sm font-semibold text-gray-800 p-2 ${
+              msg.user_id === user.id ? "text-right" : "text-left"
+            }`,
+          },
+          {
+            element: "div",
+            name: `msg-${msg._id}`,
+            label: msg.text,
+            className: `w-full p-2 rounded ${
+              msg.user_id === user.id
+                ? "bg-blue-100 text-right"
+                : "bg-gray-200 text-left"
+            }`,
+          },
+        ],
+      }));
+      
+      return field; 
+    }
 
-        if (field.fields && field.fields.length > 0) {
-          return {
-            ...field,
-            fields: updateFields(field.fields),
-          };
-        }
+    if (field.fields && field.fields.length > 0) {
+      return {
+        ...field,
+        fields: updateMessagesInSchema(field.fields, data),
+      };
+    }
 
-        return field;
-      });
-
-    return {
-      ...prev,
-      schema: prev.schema.map((section) => ({
-        ...section,
-        fields: updateFields(section.fields),
-      })),
-    };
+    return field;
   });
 };
+
+    
+
+    const getPayload = (fields) => {
+  return fields.reduce((acc, field) => {
+    if (field.name === "chatInput") {
+      
+      field.value = { value: "", mention: null };
+      
+    }
+
+    if (field.fields && field.fields.length > 0) {
+      const nestedPayload = getPayload(field.fields);
+      Object.assign(acc, nestedPayload);
+    }
+
+    return acc;
+  }, {});
+};
+
 
 
     const fetchNotes = async () => {
     try {
-      const res = await api.get(`/candidate/${state._id}/notes`);
+      const res = await api.get(`/candidate/${state._id}/notes`,
+        { headers: { Authorization: `Bearer ${token}` } });
       setMessages(res.data);
-      updateMessagesInSchema(res.data);
+      setSchema((prev) => ({ ...prev, schema: updateMessagesInSchema(prev.schema ,res.data)}));
     } catch (err) {
-        console.log(err);
+        
+      toast.error("Failed to load notes");
+    }
+  };
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get(`/auth/users`,
+        { headers: { Authorization: `Bearer ${token}` } });
+        
+      setSchema((prev) => ({ ...prev, schema: updateUsersInSchema(prev.schema ,res.data)}));
+        
+    } catch (err) {
         
       toast.error("Failed to load notes");
     }
@@ -210,16 +246,17 @@ const updateMessagesInSchema = (msgs) => {
       setCandidateData(state);
       setSchema((prev) => ({ ...prev, schema: updateSchema(prev.schema) }));
       fetchNotes();
+      fetchUsers();
 
       socket.emit("joinRoom", state._id);
 
       socket.on("noteAdded", (note) => {
-        console.log("note",note);
         
         setMessages((prev) => {
             
           const updated = [...prev, note];
-          updateMessagesInSchema(updated);
+          
+      setSchema((prev) => ({ ...prev, schema: updateMessagesInSchema(prev.schema ,updated)}));
           return updated;
         });
       });
@@ -231,27 +268,36 @@ const updateMessagesInSchema = (msgs) => {
   }, [state]);
 
     const handleSelectedRecord = async(field) => {
-
-
-
+if (field.name==="chatInput"){
+  
+  setChatInput(field.value)
+}
         if (field.name === "sendButton") {
-      const payload = getPayload(schema.schema);
-      if (!payload.chatInput.trim()) return;
+let messageId;
        try {
       const res = await api.post(
         `/candidate/${state._id}/notes`,
-        { text: payload.chatInput },
+        { text: chatInput.value },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      if (res.status){
+        
+        messageId=res.data?.newNote._id
+           getPayload(schema.schema);
+      }
     }catch(err){
         console.log(err);
         
     }
+    
+    
 
       socket.emit("newNote", {
         candidateId: state._id,
-        userId: user._id,
-        text: payload.chatInput,
+        userId: user.id,
+         text: chatInput.value,
+         messageId:messageId,
+        mention: chatInput.mention,
       });
 
      

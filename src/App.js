@@ -8,19 +8,19 @@ import ChatBook from "./pages/ChatBook";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    setLoading(false); // auth check complete
+    setLoading(false);
   }, []);
 
-  // Protected Route wrapper
   const PrivateRoute = ({ children }) => {
-    if (loading) return null; // or a loader/spinner
+    if (loading) return null;
+
     return user ? children : <Navigate to="/login" />;
   };
 
@@ -46,11 +46,9 @@ function App() {
       />
 
       <Routes>
-        {/* Public Routes */}
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
         <Route path="/signup" element={<SignupPage setUser={setUser} />} />
 
-        {/* Private Routes */}
         <Route
           path="/dashboard"
           element={
@@ -60,16 +58,15 @@ function App() {
           }
         />
         <Route
-  path="/candidate/:id/notes"
-  element={
-    <PrivateRoute>
-      <ChatBook user={user} setUser={setUser} />
-    </PrivateRoute>
-  }
-/>
+          path="/candidate/:id/notes"
+          element={
+            <PrivateRoute>
+              <ChatBook user={user} setUser={setUser} />
+            </PrivateRoute>
+          }
+        />
 
 
-        {/* Default redirect */}
         <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
       </Routes>
     </Router>
